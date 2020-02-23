@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 @SideOnly(Side.CLIENT)
 public class HUD extends Module {
 
@@ -28,12 +28,11 @@ public class HUD extends Module {
 
     public HUD() {
         setState(true);
-        setArray(false);
     }
 
     @EventTarget
-    public void onRender2D(Render2DEvent event) {
-        if (LiquidBounce.hud == null || mc.currentScreen instanceof GuiHudDesigner)
+    public void onRender2D(final Render2DEvent event) {
+        if (mc.currentScreen instanceof GuiHudDesigner)
             return;
 
         LiquidBounce.hud.render(false);
@@ -50,13 +49,15 @@ public class HUD extends Module {
     }
 
     @EventTarget(ignoreCondition = true)
-    public void onScreenChange(ScreenEvent event) {
-        if(mc.theWorld == null || mc.thePlayer == null)
+    public void onScreen(final ScreenEvent event) {
+        if (mc.theWorld == null || mc.thePlayer == null)
             return;
 
-        if(getState() && event.getGuiScreen() != null && !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner) && blurValue.get())
+        if (getState() && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.getGuiScreen() != null &&
+                !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner))
             mc.entityRenderer.loadShader(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"));
-        else
+        else if (mc.entityRenderer.getShaderGroup() != null &&
+                mc.entityRenderer.getShaderGroup().getShaderGroupName().contains("liquidbounce/blur.json"))
             mc.entityRenderer.stopUseShader();
     }
 }
